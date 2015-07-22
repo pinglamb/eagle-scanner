@@ -8,6 +8,9 @@ import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
 import android.util.Log;
+import android.view.KeyEvent;
+import android.view.View;
+import android.widget.EditText;
 
 import com.marsontech.scsi.ScsiDeviceDriver;
 
@@ -17,7 +20,7 @@ import java.nio.ByteBuffer;
 /**
  * Created by pinglamb on 7/20/15.
  */
-public class Scanner {
+public class Scanner implements View.OnKeyListener {
     private static final String TAG = Scanner.class.getSimpleName();
 
     private static final int INTERFACE_SUBCLASS_SCSI = 6;
@@ -32,6 +35,10 @@ public class Scanner {
     private UsbDeviceConnection deviceConnection;
 
     private ScsiDeviceDriver driver;
+
+    private String scanBuffer;
+    private OnScanSuccessListener listener = null;
+    private boolean scanning = false;
 
     public Scanner(Context context, UsbDevice device) {
         this.context = context;
@@ -64,14 +71,27 @@ public class Scanner {
     }
 
     public boolean scan() {
-        try {
-            sendResetCommand();
-            sendScanCommand();
-            return true;
-        } catch (IOException e) {
-            Log.e(TAG, "Failed to Scan", e);
+        if (!scanning) {
+            scanning = true;
+            try {
+                sendResetCommand();
+                sendScanCommand();
+                return true;
+            } catch (IOException e) {
+                Log.e(TAG, "Failed to Scan", e);
+                return false;
+            }
+        } else {
             return false;
         }
+    }
+
+    public void setOnScanSuccessListener(OnScanSuccessListener listener) {
+        this.listener = listener;
+    }
+
+    public String getLastScanResult() {
+        return scanBuffer.toString();
     }
 
     public boolean open() {
@@ -134,5 +154,27 @@ public class Scanner {
         data[10] = (byte) 0x30;
         data[11] = (byte) 0x10;
         driver.write(1024, ByteBuffer.wrap(data));
+    }
+
+    @Override
+    public boolean onKey(View v, int keyCode, KeyEvent event) {
+        Log.d(TAG, "KeyCode: " + keyCode);
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_ENTER:
+                if (scanning) {
+                    scanBuffer = ((EditText)v).getText().toString();
+                    if (this.listener != null) {
+                        this.listener.onScanSuccess(scanBuffer);
+                    }
+                    ((EditText) v).setText(null);
+                    scanning = false;
+                    return true;
+                }
+        }
+        return false;
+    }
+
+    public interface OnScanSuccessListener {
+        public abstract void onScanSuccess(String result);
     }
 }

@@ -5,15 +5,22 @@
 
     <TextView
         android:id="@+id/result"
-        android:textSize="24sp"
         android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:layout_height="wrap_content" />
+        android:textSize="24sp" />
+
+    <EditText
+        android:id="@+id/dummy"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerInParent="true" />
 
     <Button
         android:id="@+id/scan"
         android:layout_width="match_parent"
+        android:layout_height="64dp"
         android:layout_alignParentBottom="true"
-        android:text="Scan"
-        android:layout_height="64dp" />
+        android:text="Scan" />
 </RelativeLayout>

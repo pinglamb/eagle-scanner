@@ -9,8 +9,11 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import com.marsontech.Scanner;
@@ -22,17 +25,19 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class ScanActivity extends AppCompatActivity {
+public class ScanActivity extends AppCompatActivity implements Scanner.OnScanSuccessListener {
+    private static final String TAG = ScanActivity.class.getSimpleName();
     private static final String ACTION_USB_PERMISSION = "com.pinglamb.marson.USB_PERMISSION";
 
     @Bind(R.id.result)
     TextView resultView;
+    @Bind(R.id.dummy)
+    EditText dummyInput;
     @Bind(R.id.scan)
     Button scanButton;
 
     UsbManager usbManager;
     UsbDevice usbDevice = null;
-    Scanner scanner = null;
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -52,6 +57,8 @@ public class ScanActivity extends AppCompatActivity {
             }
         }
     };
+
+    Scanner scanner = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,8 +123,10 @@ public class ScanActivity extends AppCompatActivity {
 
         scanner = new Scanner(this, usbDevice);
         if (scanner.open()) {
+            scanner.setOnScanSuccessListener(this);
             resultView.setText("Ready to Scan");
             scanButton.setEnabled(true);
+            dummyInput.setOnKeyListener(scanner);
         } else {
             resultView.setText("Please replug the device");
         }
@@ -125,5 +134,11 @@ public class ScanActivity extends AppCompatActivity {
 
     void deviceDenied() {
         resultView.setText("Please replug the device");
+    }
+
+    @Override
+    public void onScanSuccess(String result) {
+        resultView.setText(result);
+        resultView.requestFocus();
     }
 }
